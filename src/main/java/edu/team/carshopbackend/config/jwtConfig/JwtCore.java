@@ -2,6 +2,7 @@ package edu.team.carshopbackend.config.jwtConfig;
 
 import edu.team.carshopbackend.entity.impl.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -14,6 +15,8 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
 
 @Component
 public class JwtCore {
@@ -51,6 +54,7 @@ public class JwtCore {
     private String buildToken(final Map<String, Object> extraClaims, final UserDetails user, final long lifetime) {
         return Jwts.builder()
                 .subject(user.getUsername())
+                .id(UUID.randomUUID().toString())
                 .claims(extraClaims)
                 .issuedAt(new Date())
                 .expiration(new Date(new Date().getTime() + lifetime))
@@ -80,5 +84,13 @@ public class JwtCore {
     public boolean isAccessToken(final String token) {
         Claims claims = extractAllClaims(token);
         return claims.get("typ", String.class).equals("access");
+    }
+
+    public String getJti(String token) {
+        try {
+            return extractAllClaims(token).getId();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims().getId();
+        }
     }
 }

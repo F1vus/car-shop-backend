@@ -36,6 +36,7 @@ public class CreateCarRequestDTO {
     @NotNull
     private Long producent;
 
+    @NotNull
     private Boolean hadAccidents;
 }
 

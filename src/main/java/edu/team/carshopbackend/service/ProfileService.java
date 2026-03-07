@@ -35,8 +35,8 @@ public class ProfileService {
         return profileRepository.save(profile);
     }
 
-    public Profile save(Profile profile) {
-        return profileRepository.save(profile);
+    public void save(Profile profile) {
+        profileRepository.save(profile);
     }
 
     public double getRating(Long profileId) throws NotFoundException {

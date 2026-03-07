@@ -10,7 +10,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
+import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +25,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@NullMarked
 public class JwtTokenFilter extends OncePerRequestFilter {
     private final JwtCore jwtCore;
     private final UserService userDetailsService;
@@ -29,45 +33,46 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal
-            (@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        if (request.getRequestURI().equals("/api/auth/refresh-token")) {
+            (@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain) throws ServletException, IOException {
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-
-        String jwt = null;
-        String email = null;
+        String jwt = header.substring(7);
 
         try{
-            final String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                jwt = authHeader.substring(7);
+            if (!jwtCore.isAccessToken(jwt)) {
+                filterChain.doFilter(request, response);
+                return;
             }
-            if(jwt != null && jwtCore.isAccessToken(jwt)){
-                try{
-                    email = jwtCore.getEmailFromToken(jwt);
-                }catch (ExpiredJwtException e){
-                    handleError(response, "Expired JWT token");
-                }catch (JwtException e){
-                    handleError(response, "Invalid JWT token");
+
+            String email = jwtCore.getEmailFromToken(jwt);
+            String jti = jwtCore.getJti(jwt);
+
+            if(email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                var storedToken = jwtTokenRepository.findByJti(jti)
+                        .orElseThrow(() -> new JwtException("Token not found"));
+
+                if (storedToken.isRevoked() || storedToken.isExpired()) {
+                    handleError(response, "Token revoked");
+                    return;
                 }
-                if(email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    var isTokenValid  = jwtTokenRepository.findByToken(jwt)
-                            .map(t->!t.isExpired() && !t.isRevoked())
-                            .orElse(false);
-                    if(isTokenValid){
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-                        var authentication =
-                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    } else {
-                        handleError(response, "Invalid JWT token");
-                    }
-                }
+
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                var authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+
+        }catch (ExpiredJwtException e){
+            handleError(response, "Expired JWT token");
+            return;
+        }catch (JwtException e){
+            handleError(response, "Invalid JWT token");
+            return;
         }
 
         filterChain.doFilter(request, response);

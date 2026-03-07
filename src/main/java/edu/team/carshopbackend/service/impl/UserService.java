@@ -5,7 +5,9 @@ import edu.team.carshopbackend.entity.impl.UserDetailsImpl;
 import edu.team.carshopbackend.error.exception.NotFoundException;
 import edu.team.carshopbackend.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@NullMarked
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
@@ -31,7 +34,7 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
-    public void updateUser(User user) {
+    public void updateUser(final User user) {
         userRepository.save(user);
     }
 

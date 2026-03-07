@@ -65,11 +65,8 @@ public class SecurityConfig {
         return source;
     }
 
-
-
     @Bean
-    protected SecurityFilterChain configure(final HttpSecurity security) throws Exception
-    {
+    protected SecurityFilterChain configure(final HttpSecurity security) throws Exception {
         return security
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(withDefaults())

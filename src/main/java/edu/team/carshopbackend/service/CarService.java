@@ -6,11 +6,14 @@ import edu.team.carshopbackend.dto.CarDTO;
 import edu.team.carshopbackend.dto.CreateCarRequestDTO;
 import edu.team.carshopbackend.entity.*;
 import edu.team.carshopbackend.error.exception.NotFoundException;
+import edu.team.carshopbackend.error.exception.PhotoUploadException;
 import edu.team.carshopbackend.mapper.impl.CarMapper;
 import edu.team.carshopbackend.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -28,13 +31,6 @@ public class CarService {
     private final PhotoRepository photoRepository;
     private final CarMapper carMapper;
     private final PhotoClient photoClient;
-
-
-    @Transactional
-    public Car createProduct(Car car) {
-        car.getPhotos().forEach(photo -> photo.setCar(car));
-        return carRepository.save(car);
-    }
 
     public List<Car> getAllProducts() {
         return carRepository.findAll();
@@ -79,45 +75,54 @@ public class CarService {
 
     @Transactional
     public CarDTO createCarWithPhotos(CreateCarRequestDTO req, List<MultipartFile> photos, Profile owner) {
-        Car car = carMapper.mapFrom(req);
+        Car car = createCarEntity(req, owner);
 
-        if (req.getColor() != null) {
-            Color color = colorRepository.findById(req.getColor())
-                    .orElseThrow(() -> new NotFoundException("Color not found"));
-            car.setColor(color);
-        }
-        if (req.getPetrolType() != null) {
-            Petrol petrol = petrolRepository.findById(req.getPetrolType())
-                    .orElseThrow(() -> new NotFoundException("Petrol not found"));
-            car.setPetrolType(petrol);
-        }
-        if (req.getProducent() != null) {
-            CarProducent producent = carProducerRepository.findById(req.getProducent())
-                    .orElseThrow(() -> new NotFoundException("Producent not found"));
-            car.setProducent(producent);
-        }
-
-        car.setOwner(owner);
-
-        car = carRepository.save(car);
-
-        if (photos != null && !photos.isEmpty()) {
-            for (MultipartFile file : photos) {
-                try{
-                    UploadPhotoResponse photoResponse = photoClient.uploadPhoto(car.getId(), file);
-
-                    Photo photoEntity = new Photo();
-                    photoEntity.setCar(car);
-                    photoEntity.setUrl(photoResponse.getUrl());
-
-                    photoRepository.save(photoEntity);
-                } catch (IOException e){
-                    throw new RuntimeException("Failed to upload photo", e);
-                }
-            }
+        if (!CollectionUtils.isEmpty(photos)) {
+            attachPhotos(car, photos);
         }
 
         return carMapper.mapTo(car);
     }
 
+    private Car createCarEntity(CreateCarRequestDTO req, Profile owner) {
+
+        Car car = carMapper.mapFrom(req);
+
+        car.setColor(getOrThrow(colorRepository, req.getColor(), "Color not found"));
+        car.setPetrolType(getOrThrow(petrolRepository, req.getPetrolType(), "PetrolType not found"));
+        car.setProducent(getOrThrow(carProducerRepository, req.getProducent(), "Producent not found"));
+
+        car.setOwner(owner);
+
+        return carRepository.save(car);
+    }
+
+    private void attachPhotos(Car car, List<MultipartFile> photos) {
+
+        List<Photo> photoEntities = photos.stream()
+                .map(file -> uploadAndCreatePhoto(car, file))
+                .toList();
+
+        photoRepository.saveAll(photoEntities);
+    }
+
+    private Photo uploadAndCreatePhoto(Car car, MultipartFile file) {
+        try {
+            UploadPhotoResponse response = photoClient.uploadPhoto(car.getId(), file);
+
+            Photo photo = new Photo();
+            photo.setCar(car);
+            photo.setUrl(response.getUrl());
+
+            return photo;
+
+        } catch (IOException e) {
+            throw new PhotoUploadException("Failed to upload photo");
+        }
+    }
+
+    private <T> T getOrThrow(JpaRepository<T, Long> repo, Long id, String message) {
+        return repo.findById(id)
+                .orElseThrow(() -> new NotFoundException(message));
+    }
 }

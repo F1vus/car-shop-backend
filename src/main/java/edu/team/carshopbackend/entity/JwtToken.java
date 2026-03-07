@@ -17,8 +17,8 @@ public class JwtToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, name = "token")
-    private String token;
+    @Column(nullable = false, unique = true,name = "jti")
+    private String jti;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "token_type")

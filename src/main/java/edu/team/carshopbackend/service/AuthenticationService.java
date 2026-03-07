@@ -39,6 +39,7 @@ public class AuthenticationService {
     private final EmailVerificationTokenService emailVerificationTokenService;
 
 
+    @Transactional
     public AuthenticationResponseDTO authenticate(LoginDTO loginDTO) {
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
@@ -57,6 +58,7 @@ public class AuthenticationService {
                 .build();
     }
 
+    @Transactional
     public String register(SignupDTO signupDTO) {
         User user = new User();
 
@@ -129,6 +131,7 @@ public class AuthenticationService {
                     User user = userService.getUserByEmail(email);
 
                     String accessJwt = jwtCore.generateToken(UserDetailsImpl.build(user));
+
                     saveUserJwtToken(user, accessJwt);
 
                     return AuthenticationResponseDTO.builder()
@@ -143,10 +146,12 @@ public class AuthenticationService {
         return null;
     }
 
-    private void saveUserJwtToken(User user, String jwtToken) {
+    private void saveUserJwtToken(User user, String accessToken) {
+        String jti = jwtCore.getJti(accessToken);
+
         var token = new JwtToken();
         token.setUser(user);
-        token.setToken(jwtToken);
+        token.setJti(jti);
         token.setTokenType(JwtTokenType.BEARER);
         token.setRevoked(false);
         token.setExpired(false);
