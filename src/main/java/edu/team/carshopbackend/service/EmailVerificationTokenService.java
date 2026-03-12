@@ -4,6 +4,8 @@ import edu.team.carshopbackend.entity.EmailVerificationToken;
 import edu.team.carshopbackend.entity.User;
 import edu.team.carshopbackend.error.exception.NotFoundException;
 import edu.team.carshopbackend.repository.TokenRepository;
+import edu.team.carshopbackend.service.email.EmailAsyncFacade;
+import edu.team.carshopbackend.service.email.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class EmailVerificationTokenService {
 
     private final TokenRepository tokenRepository;
-    private final EmailService emailService;
+    private final EmailAsyncFacade emailService;
 
     @Transactional
     public EmailVerificationToken getToken(String token, User user) throws NotFoundException {
@@ -47,7 +49,12 @@ public class EmailVerificationTokenService {
         }
 
         EmailVerificationToken newToken = createToken(user);
-        emailService.sendVerificationEmail(user.getEmail(), newToken);
+        emailService.sendAsync(EmailService.EmailDetails.builder()
+                .subject("Verification system CarShop")
+                .recipient(user.getEmail())
+                .msgBody("Your new verification token: "+newToken.getToken())
+                .build()
+        );
     }
 
     public void deleteToken(EmailVerificationToken token) {

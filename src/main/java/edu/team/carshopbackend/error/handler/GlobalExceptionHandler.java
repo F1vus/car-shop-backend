@@ -53,4 +53,10 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(),e.getMessage());
     }
 
+    @ExceptionHandler(EmailSendingException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse emailSendingException(EmailSendingException e) {
+        return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),e.getMessage());
+    }
+
 }

@@ -11,6 +11,8 @@ import edu.team.carshopbackend.error.exception.ChangePasswordException;
 import edu.team.carshopbackend.error.exception.NotFoundException;
 import edu.team.carshopbackend.error.exception.RefreshTokenException;
 import edu.team.carshopbackend.repository.JwtTokenRepository;
+import edu.team.carshopbackend.service.email.EmailAsyncFacade;
+import edu.team.carshopbackend.service.email.EmailService;
 import edu.team.carshopbackend.service.impl.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -35,7 +37,7 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
     private final ProfileService profileService;
-    private final EmailService emailService;
+    private final EmailAsyncFacade emailService;
     private final EmailVerificationTokenService emailVerificationTokenService;
 
 
@@ -72,7 +74,14 @@ public class AuthenticationService {
         profile.setName(signupDTO.getUsername());
         profileService.save(profile);
 
-        emailService.sendVerificationEmail(user.getEmail(), emailVerificationTokenService.createToken(user));
+       var token = emailVerificationTokenService.createToken(user);
+
+        emailService.sendAsync(EmailService.EmailDetails.builder()
+                .subject("Verification system CarShop")
+                .recipient(user.getEmail())
+                .msgBody("Your verification token: "+token.getToken())
+                .build()
+        );
 
         log.info("Registered new user  Id: {}, Email: {}", user.getId(), user.getEmail());
         return "User registered successfully";
@@ -80,10 +89,7 @@ public class AuthenticationService {
 
     @Transactional
     public void resetPassword(String email) throws NotFoundException {
-        User user = userService.getUserByEmail(email);
-
-        var token = emailVerificationTokenService.createToken(user);
-        emailService.sendVerificationEmail(email, token);
+        //TODO
     }
 
     @Transactional
