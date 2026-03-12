@@ -28,6 +28,14 @@ public class CarController {
     private final CarService carService;
     private final CarMapper carMapper;
 
+    /**
+     * Creates a new car with optional photos for the authenticated user.
+     *
+     * @param carRequest car creation data
+     * @param photos optional photos attached to the car
+     * @param principal authenticated principal providing owner profile
+     * @return created CarDTO
+     */
     @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/cars", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Creates a new car", description = "Creates a new car in the system based on the submitted DTO data and returns the created object")
@@ -39,6 +47,11 @@ public class CarController {
         return carService.createCarWithPhotos(carRequest, photos, principal.getProfile());
     }
 
+    /**
+     * Returns DTOs for all cars.
+     *
+     * @return list of CarDTO
+     */
     @GetMapping("/cars")
     @Operation(summary = "Retrieves a list of all cars", description = "Returns a list of all cars registered in the system.")
     public List<CarDTO> findAllAutos() {
@@ -47,6 +60,12 @@ public class CarController {
                 .toList();
     }
 
+    /**
+     * Returns car by id.
+     *
+     * @param id car id
+     * @return CarDTO for the car
+     */
     @GetMapping("/cars/{id}")
     @Operation(summary = "Picks up the car by ID", description = "Returns the car with the specified ID, if it exists. If the car does not exist, returns status 404.")
     public CarDTO findAutoById(@PathVariable Long id) {
@@ -54,6 +73,13 @@ public class CarController {
         return carMapper.mapTo(car);
     }
 
+    /**
+     * Partially updates a car identified by id using values from provided DTO.
+     *
+     * @param id car id
+     * @param carDTO DTO containing updated fields
+     * @return updated CarDTO
+     */
     @PatchMapping("/cars/{id}")
     @Operation(summary = "Updates the car", description = "Updates the existing car with the specified ID. Returns the updated object or throws an exception if the car does not exist.")
     public CarDTO updateCar(@PathVariable Long id, @RequestBody CarDTO carDTO) {
@@ -64,12 +90,23 @@ public class CarController {
         return carMapper.mapTo(updatedCar);
     }
 
+    /**
+     * Delete car by car id
+     *
+     * @param id car id
+     */
     @DeleteMapping("/cars/{id}")
     @Operation(summary = "Removes the car", description = "Removes the vehicle with the specified ID from the system.")
     public void deleteCar(@PathVariable Long id) {
         carService.deleteCarById(id);
     }
 
+    /**
+     * Returns suggested cars matching the query.
+     *
+     * @param query search string (minimum length 2)
+     * @return list of suggestions
+     */
     @GetMapping("/cars/suggestions")
     @Operation(summary = "Tips for naming cars", description = "car return list")
     public List<CarSuggestionDTO> suggestionCar(@RequestParam String query) {

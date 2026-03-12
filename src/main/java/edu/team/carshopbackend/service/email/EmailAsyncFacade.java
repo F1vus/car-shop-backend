@@ -15,6 +15,12 @@ public class EmailAsyncFacade {
     private final EmailService emailService;
     private final ExecutorService virtualThreadExecutor;
 
+    /**
+     * Executes email sending asynchronously using the configured executor.
+     * Errors are logged and swallowed to avoid impacting caller.
+     *
+     * @param details email details (recipient, subject, body)
+     */
     public void sendAsync(EmailService.EmailDetails details) {
         virtualThreadExecutor.submit(() -> {
             try {

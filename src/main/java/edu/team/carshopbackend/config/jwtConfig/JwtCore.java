@@ -34,6 +34,12 @@ public class JwtCore {
         this.refreshExpiration = refreshExpiration;
     }
 
+    /**
+     * Generates a JWT access token for the authenticated user.
+     *
+     * @param userDetails the authenticated user details
+     * @return generated JWT token as a String
+     */
     public String generateToken(UserDetails userDetails) {
         UserDetailsImpl user = (UserDetailsImpl) userDetails;
 
@@ -43,6 +49,13 @@ public class JwtCore {
 
         return buildToken(claims, user, jwtExpiration);
     }
+
+    /**
+     * Generates a refresh token for the provided user details.
+     *
+     * @param user user details
+     * @return refresh JWT string
+     */
     public String generateRefreshToken(final UserDetails user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("typ", "refresh");
@@ -62,8 +75,13 @@ public class JwtCore {
                 .compact();
     }
 
+    /**
+     * Extracts all claims from the provided token without validating expiration.
+     *
+     * @param token JWT string
+     * @return parsed Claims object
+     */
     public Claims extractAllClaims(final String token) {
-
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
@@ -71,21 +89,45 @@ public class JwtCore {
                 .getPayload();
     }
 
+    /**
+     * Returns subject (email) from the token claims.
+     *
+     * @param token JWT string
+     * @return email stored in token subject
+     */
     public String getEmailFromToken(final String token) {
         Claims claims = extractAllClaims(token);
         return claims.getSubject();
     }
 
+    /**
+     * Checks whether the token is a refresh token.
+     *
+     * @param token JWT string
+     * @return true if token type equals "refresh"
+     */
     public boolean isRefreshToken(final String token) {
         Claims claims = extractAllClaims(token);
         return claims.get("typ", String.class).equals("refresh");
     }
 
+    /**
+     * Checks whether the token is an access token.
+     *
+     * @param token JWT string
+     * @return true if token type equals "access"
+     */
     public boolean isAccessToken(final String token) {
         Claims claims = extractAllClaims(token);
         return claims.get("typ", String.class).equals("access");
     }
 
+    /**
+     * Returns the token identifier (jti). Works also for expired tokens.
+     *
+     * @param token JWT string
+     * @return jti value
+     */
     public String getJti(String token) {
         try {
             return extractAllClaims(token).getId();

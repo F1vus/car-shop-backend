@@ -31,6 +31,16 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private final UserService userDetailsService;
     private final JwtTokenRepository jwtTokenRepository;
 
+    /**
+     * Filters incoming requests and validates JWT access tokens. If a valid token is
+     * present and not revoked, the authenticated user is set in SecurityContext.
+     *
+     * @param request current HTTP request
+     * @param response current HTTP response
+     * @param filterChain filter chain to continue
+     * @throws ServletException on servlet errors
+     * @throws IOException on IO errors
+     */
     @Override
     protected void doFilterInternal
             (@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain) throws ServletException, IOException {

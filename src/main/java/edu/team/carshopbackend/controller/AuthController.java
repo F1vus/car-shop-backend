@@ -30,12 +30,24 @@ public class AuthController {
     private final UserService userService;
     private final EmailVerificationTokenService emailVerificationTokenService;
 
+    /**
+     * Authenticate user and return access/refresh tokens.
+     *
+     * @param loginDTO credentials for login
+     * @return authentication response DTO
+     */
     @PostMapping("/login")
     @Operation(summary = "User login", description = "login of user with(email,password), and return AuthenticationResponseDTO")
     public AuthenticationResponseDTO login(@RequestBody LoginDTO loginDTO) {
         return authenticationService.authenticate(loginDTO);
     }
 
+    /**
+     * Registers a new user account.
+     *
+     * @param signupDTO signup information
+     * @return created response with success message
+     */
     @PostMapping("/register")
     @Operation(summary = "User registration", description = "registers of new user with (username,email, and password), and return string-success")
     public ResponseEntity<String> signup(@RequestBody SignupDTO signupDTO){
@@ -43,6 +55,12 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(registerResult);
     }
 
+    /**
+     * Verifies email using provided token and email.
+     *
+     * @param req verification request containing token and email
+     * @return OK when verification succeeds, or bad request for expired token
+     */
     @PostMapping("/verify")
     public ResponseEntity<String> verify(@RequestBody VerifyRequestDTO req) {
         var token = emailVerificationTokenService.getToken(req.getToken(), userService.getUserByEmail(req.getEmail()));
@@ -59,23 +77,46 @@ public class AuthController {
         return ResponseEntity.ok("Email confirmed!");
     }
 
+    /**
+     * Requests a new verification token to be sent to the given email.
+     *
+     * @param req request containing email to resend token
+     * @return OK when token is sent
+     */
     @PostMapping("/reset-verify")
     public ResponseEntity<String> resetVerify(@RequestBody ResetVerifyRequestDTO req) {
         emailVerificationTokenService.resetVerificationToken(userService.getUserByEmail(req.getEmail()));
         return ResponseEntity.ok("New token sent");
     }
 
+    /**
+     * Refreshes access token using refresh token provided in Authorization header.
+     *
+     * @param request HTTP servlet request
+     * @return new authentication response
+     */
     @PostMapping("/refresh-token")
     public ResponseEntity<AuthenticationResponseDTO> refresh(HttpServletRequest request) {
         AuthenticationResponseDTO dto = authenticationService.refreshToken(request);
         return ResponseEntity.ok(dto);
     }
 
+    /**
+     * Initiates password reset for the given email.
+     *
+     * @param dto request containing the email
+     */
     @PostMapping("/reset-password")
     public void resetPassword(@RequestBody ResetVerifyRequestDTO dto) {
         authenticationService.resetPassword(dto.getEmail());
     }
 
+    /**
+     * Changes password for authenticated user.
+     *
+     * @param principal authenticated principal
+     * @param dto DTO containing old and new password
+     */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
     public void changePassword(@AuthenticationPrincipal UserDetailsImpl principal,
@@ -83,6 +124,12 @@ public class AuthController {
         authenticationService.changePassword(principal.getId(), dto);
     }
 
+    /**
+     * Changes email for authenticated user.
+     *
+     * @param principal authenticated principal
+     * @param dto DTO containing the new email
+     */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-email")
     public void changeEmail(@AuthenticationPrincipal UserDetailsImpl principal,

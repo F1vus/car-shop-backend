@@ -41,6 +41,12 @@ public class AuthenticationService {
     private final EmailVerificationTokenService emailVerificationTokenService;
 
 
+    /**
+     * Authenticates user by credentials and returns access and refresh tokens.
+     *
+     * @param loginDTO login data transfer object (email and password)
+     * @return authentication response with access and refresh tokens
+     */
     @Transactional
     public AuthenticationResponseDTO authenticate(LoginDTO loginDTO) {
         Authentication authentication = authenticationManager
@@ -60,6 +66,12 @@ public class AuthenticationService {
                 .build();
     }
 
+    /**
+     * Registers a new user and creates an associated profile and email verification token.
+     *
+     * @param signupDTO signup data (username, email, password)
+     * @return success message
+     */
     @Transactional
     public String register(SignupDTO signupDTO) {
         User user = new User();
@@ -87,14 +99,28 @@ public class AuthenticationService {
         return "User registered successfully";
     }
 
+    /**
+     * Triggers the reset password flow for the given email.
+     *
+     * @param email user email to reset password for
+     * @throws NotFoundException when the user is not found
+     */
     @Transactional
     public void resetPassword(String email) throws NotFoundException {
         //TODO
     }
 
+    /**
+     * Changes password for the user with the given id after verifying the old password.
+     *
+     * @param userId id of the user
+     * @param dto change password request DTO containing old and new passwords
+     * @throws ChangePasswordException when the old password does not match
+     * @throws NotFoundException when the user is not found
+     */
     @Transactional
     public void changePassword(Long userId, ChangePasswordRequestDTO dto)
-            throws ChangePasswordException, NotFoundException {
+        throws ChangePasswordException, NotFoundException {
 
         User user = userService.getUserById(userId);
 
@@ -106,6 +132,13 @@ public class AuthenticationService {
         userService.updateUser(user);
     }
 
+    /**
+     * Updates the email address of the user.
+     *
+     * @param userId id of the user
+     * @param dto DTO containing the new email
+     * @throws NotFoundException when the user is not found
+     */
     @Transactional
     public void changeEmail(Long userId, UpdateEmailRequestDTO dto) throws NotFoundException {
         User user = userService.getUserById(userId);
@@ -113,6 +146,12 @@ public class AuthenticationService {
         userService.updateUser(user);
     }
 
+    /**
+     * Refreshes access token using the provided refresh token in Authorization header.
+     *
+     * @param request HTTP servlet request containing Authorization header with refresh token
+     * @return new AuthenticationResponseDTO with new access token and the same refresh token
+     */
     public AuthenticationResponseDTO refreshToken(HttpServletRequest request) {
         String refreshToken = null;
         String email;

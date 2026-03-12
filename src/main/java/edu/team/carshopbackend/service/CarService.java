@@ -32,18 +32,44 @@ public class CarService {
     private final CarMapper carMapper;
     private final PhotoClient photoClient;
 
+    /**
+     * Returns all cars stored in the repository.
+     *
+     * @return list of all cars
+     */
     public List<Car> getAllProducts() {
         return carRepository.findAll();
     }
 
+    /**
+     * Find car by id.
+     *
+     * @param id car id
+     * @return car entity
+     * @throws NotFoundException if car not found
+     */
     public Car getProductById(Long id) throws NotFoundException {
         return carRepository.findById(id).orElseThrow(() -> new NotFoundException("Car not found"));
     }
 
+    /**
+     * Suggest cars by name using a case-insensitive contains search.
+     *
+     * @param query search term
+     * @return list of matching cars
+     */
     public List<Car> suggestCar(String query) {
         return carRepository.findByNameContainingIgnoreCase(query);
     }
 
+    /**
+     * Updates an existing car partially using non-null fields from the provided car object.
+     *
+     * @param id id of the car to update
+     * @param car car object with new values
+     * @return updated car
+     * @throws NotFoundException when car does not exist
+     */
     public Car carUpdate(Long id, Car car) throws NotFoundException {
         car.setId(id);
 
@@ -65,14 +91,35 @@ public class CarService {
         }).orElseThrow(() -> new NotFoundException("Car does not exist with id " + id));
     }
 
+    /**
+     * Checks whether a car exists by id.
+     *
+     * @param id car id
+     * @return true if exists, false otherwise
+     */
     public boolean isExists(Long id) {
         return carRepository.existsById(id);
     }
 
+
+    /**
+     * Deletes the car identified by id.
+     *
+     * @param id car id
+     */
     public void deleteCarById(Long id) {
         carRepository.deleteById(id);
     }
 
+
+    /**
+     * Creates a car entity from request data and uploads provided photos.
+     *
+     * @param req create car request DTO
+     * @param photos list of multipart photo files (optional)
+     * @param owner profile of the car owner
+     * @return created car DTO
+     */
     @Transactional
     public CarDTO createCarWithPhotos(CreateCarRequestDTO req, List<MultipartFile> photos, Profile owner) {
         Car car = createCarEntity(req, owner);
@@ -83,6 +130,8 @@ public class CarService {
 
         return carMapper.mapTo(car);
     }
+
+
 
     private Car createCarEntity(CreateCarRequestDTO req, Profile owner) {
 

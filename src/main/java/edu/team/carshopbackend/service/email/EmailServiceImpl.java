@@ -22,6 +22,11 @@ public class EmailServiceImpl implements EmailService {
         this.sender = sender;
     }
 
+    /**
+     * Sends an email using JavaMail.
+     *
+     * @param details email details (recipient, subject, body)
+     */
     @Override
     public void send(EmailDetails details) {
         try {

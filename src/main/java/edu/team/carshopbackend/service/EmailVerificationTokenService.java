@@ -20,6 +20,14 @@ public class EmailVerificationTokenService {
     private final TokenRepository tokenRepository;
     private final EmailAsyncFacade emailService;
 
+    /**
+     * Finds a verification token for given user and token string.
+     *
+     * @param token token string
+     * @param user user entity
+     * @return EmailVerificationToken if found
+     * @throws NotFoundException when token is invalid
+     */
     @Transactional
     public EmailVerificationToken getToken(String token, User user) throws NotFoundException {
         return tokenRepository
@@ -27,6 +35,13 @@ public class EmailVerificationTokenService {
                 .orElseThrow(() -> new NotFoundException("Invalid code"));
     }
 
+
+    /**
+     * Creates a verification token for the user.
+     *
+     * @param user user entity
+     * @return created token
+     */
     public EmailVerificationToken createToken(User user) throws NotFoundException {
         EmailVerificationToken token =
                 tokenRepository.findByUser(user).orElse(new EmailVerificationToken());
@@ -39,8 +54,16 @@ public class EmailVerificationTokenService {
         return tokenRepository.save(token);
     }
 
+    /**
+     * Refreshes a verification token for the user.
+     *
+     * @param user user entity
+     * @throws IllegalStateException if
+     */
     public void resetVerificationToken(User user) throws IllegalStateException{
         EmailVerificationToken token = getTokenByUser(user);
+
+
 
         if (token != null) {
             if (LocalDateTime.now().isBefore(token.getCreatedAt().plusSeconds(15))) {
@@ -57,13 +80,26 @@ public class EmailVerificationTokenService {
         );
     }
 
+    /**
+     * Deletes the specified verification token.
+     *
+     * @param token token to delete
+     */
     public void deleteToken(EmailVerificationToken token) {
         tokenRepository.deleteById(token.getId());
     }
 
+    /**
+     * Returns verification token associated with the user.
+     *
+     * @param user user entity
+     * @return EmailVerificationToken
+     * @throws NotFoundException when no token exists
+     */
     public EmailVerificationToken getTokenByUser(User user) throws NotFoundException {
         return tokenRepository.findByUser(user).orElseThrow(() -> new NotFoundException("Invalid code"));
     }
+
 
     private String generateToken() {
         return String.format("%06d", ThreadLocalRandom.current().nextInt(0, 1_000_000));

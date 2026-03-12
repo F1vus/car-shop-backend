@@ -20,6 +20,13 @@ public class LogoutService implements LogoutHandler {
     private final JwtTokenRepository jwtTokenRepository;
     private final JwtCore jwtCore;
 
+    /**
+     * Logout handler that revokes and expires the JWT token found in Authorization header.
+     *
+     * @param request current HTTP request
+     * @param response current HTTP response
+     * @param authentication authentication information (may be null)
+     */
     @Override
     public void logout(HttpServletRequest request, @NonNull HttpServletResponse response, Authentication authentication) {
         final String authHeader = request.getHeader("Authorization");
