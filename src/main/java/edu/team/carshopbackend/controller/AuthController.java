@@ -8,6 +8,7 @@ import edu.team.carshopbackend.service.EmailVerificationTokenService;
 import edu.team.carshopbackend.service.impl.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -38,7 +39,7 @@ public class AuthController {
      */
     @PostMapping("/login")
     @Operation(summary = "User login", description = "login of user with(email,password), and return AuthenticationResponseDTO")
-    public AuthenticationResponseDTO login(@RequestBody LoginDTO loginDTO) {
+    public AuthenticationResponseDTO login(@Valid @RequestBody LoginDTO loginDTO) {
         return authenticationService.authenticate(loginDTO);
     }
 
@@ -50,7 +51,7 @@ public class AuthController {
      */
     @PostMapping("/register")
     @Operation(summary = "User registration", description = "registers of new user with (username,email, and password), and return string-success")
-    public ResponseEntity<String> signup(@RequestBody SignupDTO signupDTO){
+    public ResponseEntity<String> signup(@Valid @RequestBody SignupDTO signupDTO){
         String registerResult  = authenticationService.register(signupDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(registerResult);
     }
@@ -62,7 +63,7 @@ public class AuthController {
      * @return OK when verification succeeds, or bad request for expired token
      */
     @PostMapping("/verify")
-    public ResponseEntity<String> verify(@RequestBody VerifyRequestDTO req) {
+    public ResponseEntity<String> verify(@Valid @RequestBody VerifyRequestDTO req) {
         var token = emailVerificationTokenService.getToken(req.getToken(), userService.getUserByEmail(req.getEmail()));
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
             return ResponseEntity.badRequest().body("Expired code");
@@ -84,7 +85,7 @@ public class AuthController {
      * @return OK when token is sent
      */
     @PostMapping("/reset-verify")
-    public ResponseEntity<String> resetVerify(@RequestBody ResetVerifyRequestDTO req) {
+    public ResponseEntity<String> resetVerify(@Valid @RequestBody ResetVerifyRequestDTO req) {
         emailVerificationTokenService.resetVerificationToken(userService.getUserByEmail(req.getEmail()));
         return ResponseEntity.ok("New token sent");
     }
@@ -102,16 +103,6 @@ public class AuthController {
     }
 
     /**
-     * Initiates password reset for the given email.
-     *
-     * @param dto request containing the email
-     */
-    @PostMapping("/reset-password")
-    public void resetPassword(@RequestBody ResetVerifyRequestDTO dto) {
-        authenticationService.resetPassword(dto.getEmail());
-    }
-
-    /**
      * Changes password for authenticated user.
      *
      * @param principal authenticated principal
@@ -120,7 +111,7 @@ public class AuthController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
     public void changePassword(@AuthenticationPrincipal UserDetailsImpl principal,
-                               @RequestBody ChangePasswordRequestDTO dto)  {
+                               @Valid @RequestBody ChangePasswordRequestDTO dto)  {
         authenticationService.changePassword(principal.getId(), dto);
     }
 
@@ -133,7 +124,7 @@ public class AuthController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-email")
     public void changeEmail(@AuthenticationPrincipal UserDetailsImpl principal,
-                            @RequestBody UpdateEmailRequestDTO dto)  {
+                            @Valid @RequestBody UpdateEmailRequestDTO dto)  {
         authenticationService.changeEmail(principal.getId(), dto);
     }
 }

@@ -100,17 +100,6 @@ public class AuthenticationService {
     }
 
     /**
-     * Triggers the reset password flow for the given email.
-     *
-     * @param email user email to reset password for
-     * @throws NotFoundException when the user is not found
-     */
-    @Transactional
-    public void resetPassword(String email) throws NotFoundException {
-        //TODO
-    }
-
-    /**
      * Changes password for the user with the given id after verifying the old password.
      *
      * @param userId id of the user
