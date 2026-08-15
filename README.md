@@ -184,9 +184,7 @@ Content-Type: application/json
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
-  "tokenType": "Bearer",
-  "expiresIn": 3600000
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
 
@@ -222,9 +220,7 @@ Authorization: Bearer {REFRESH_TOKEN}
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
-  "tokenType": "Bearer",
-  "expiresIn": 3600000
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
 
@@ -284,18 +280,18 @@ Form data:
   "name": "BMW 3 Series",
   "description": "Excellent condition",
   "price": 45000,
-  "productionYear": 2022,
+  "year": 2022,
   "mileage": 15000,
   "color": { "id": 1, "name": "Black" },
-  "petrol": { "id": 2, "name": "Diesel" },
-  "carProducer": { "id": 3, "name": "BMW" },
+  "petrolType": { "id": 2, "name": "Diesel" },
+  "producent": { "id": 3, "name": "BMW" },
   "photos": [
     {
       "id": 101,
       "url": "https://storage.example.com/photo1.jpg"
     }
   ],
-  "profile": { ... }
+  "owner": { ... }
 }
 ```
 **Autoryzacja**: Wymagana
@@ -388,17 +384,11 @@ Authorization: Bearer {TOKEN}
 ```json
 {
   "id": 1,
-  "firstName": "John",
-  "lastName": "Doe",
+  "name": "John",
   "phoneNumber": "+48123456789",
-  "city": "Warsaw",
-  "rating": 4.5,
-  "ratingCount": 10,
-  "user": {
-    "id": 1,
-    "username": "john_doe",
-    "email": "john@example.com"
-  }
+  "email": "john@example.com",
+  "profileImage": "https...",
+  "registrationDate": "2026-08-15T14:59:22.332767"
 }
 ```
 **Autoryzacja**: Wymagana
@@ -410,10 +400,8 @@ Authorization: Bearer {TOKEN}
 Content-Type: application/json
 
 {
-  "firstName": "John",
-  "lastName": "Smith",
+  "name": "John",
   "phoneNumber": "+48987654321",
-  "city": "Krakow"
 }
 ```
 **Odpowiedź (200 OK)**: Zaktualizowany profil  
@@ -514,52 +502,6 @@ GET /api/v1/lookups/metadata
     { "id": 3, "name": "Hybrid" },
     ...
   ]
-}
-```
-
----
-
-## Modele danych
-
-### Car (Samochód)
-```json
-{
-  "id": 1,
-  "name": "BMW 3 Series",
-  "description": "Excellent condition, full service history",
-  "price": 45000,
-  "productionYear": 2022,
-  "mileage": 15000,
-  "color": { "id": 1, "name": "Black" },
-  "petrol": { "id": 2, "name": "Diesel" },
-  "carProducer": { "id": 3, "name": "BMW" },
-  "photos": [ { "id": 101, "url": "..." } ],
-  "profile": { "id": 5, "firstName": "John", ... }
-}
-```
-
-### Profile (Profil użytkownika)
-```json
-{
-  "id": 1,
-  "firstName": "John",
-  "lastName": "Doe",
-  "phoneNumber": "+48123456789",
-  "city": "Warsaw",
-  "rating": 4.5,
-  "ratingCount": 10,
-  "user": { "id": 1, "username": "john_doe", "email": "john@example.com" }
-}
-```
-
-### User (Użytkownik)
-```json
-{
-  "id": 1,
-  "username": "john_doe",
-  "email": "john@example.com",
-  "password": "hashed_password",
-  "enabled": true
 }
 ```
 
@@ -696,21 +638,6 @@ curl http://localhost:8080/api/v1/cars
 ```bash
 curl http://localhost:8080/api/v1/cars/suggestions?query=BMW
 ```
-
----
-
-## Kody błędów HTTP
-
-| Kod | Znaczenie |
-|-----|-----------|
-| 200 | OK - Żądanie pomyślne |
-| 201 | Created - Zasób utworzony |
-| 204 | No Content - Pomyślnie usunięto |
-| 400 | Bad Request - Niepoprawne dane |
-| 401 | Unauthorized - Brak lub nieprawidłowy token |
-| 403 | Forbidden - Brak dostępu |
-| 404 | Not Found - Zasób nie znaleziony |
-| 500 | Server Error - Błąd serwera |
 
 ---
 
