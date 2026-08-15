@@ -632,8 +632,13 @@ export SPRING_EMAIL_PASSWORD=your-app-password
 
 Następnie uruchom aplikację:
 
+Windows:
 ```bash
-mvn spring-boot:run
+mvnw.cmd spring-boot:run
+```
+Linux / macOS:
+```bash
+./mvnw spring-boot:run
 ```
 
 ---
