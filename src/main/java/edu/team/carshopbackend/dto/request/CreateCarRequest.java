@@ -1,16 +1,17 @@
-package edu.team.carshopbackend.dto;
+package edu.team.carshopbackend.dto.request;
 
 import edu.team.carshopbackend.entity.enums.CarState;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
 @Data
-public class CreateCarRequestDTO {
-    @NotBlank
+public class CreateCarRequest {
+    @NotBlank(message = "Name cannot be empty!")
     private String name;
 
-    @NotNull
+    @PositiveOrZero(message = "The price must be greater than or equal to zero")
     private Long price;
 
     private String description;

@@ -3,8 +3,9 @@ package edu.team.carshopbackend.service;
 import edu.team.carshopbackend.client.PhotoClient;
 import edu.team.carshopbackend.client.UploadPhotoResponse;
 import edu.team.carshopbackend.dto.CarDTO;
-import edu.team.carshopbackend.dto.CreateCarRequestDTO;
+import edu.team.carshopbackend.dto.request.CreateCarRequest;
 import edu.team.carshopbackend.entity.*;
+import edu.team.carshopbackend.entity.impl.UserDetailsImpl;
 import edu.team.carshopbackend.error.exception.NotFoundException;
 import edu.team.carshopbackend.error.exception.PhotoUploadException;
 import edu.team.carshopbackend.mapper.impl.CarMapper;
@@ -18,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -70,10 +72,11 @@ public class CarService {
      * @return updated car
      * @throws NotFoundException when car does not exist
      */
-    public Car carUpdate(Long id, Car car) throws NotFoundException {
-        car.setId(id);
-
+    public Car carUpdate(Long id, Car car, UserDetailsImpl userDetails) throws NotFoundException {
         return carRepository.findById(id).map(existingCar -> {
+            if(!Objects.equals(existingCar.getOwner().getId(), userDetails.getProfile().getId())){
+                throw new NotFoundException("Car does not exist in your profile");
+            }
             Optional.ofNullable(car.getName()).ifPresent(existingCar::setName);
             Optional.ofNullable(car.getPrice()).ifPresent(existingCar::setPrice);
             Optional.ofNullable(car.getDescription()).ifPresent(existingCar::setDescription);
@@ -121,7 +124,7 @@ public class CarService {
      * @return created car DTO
      */
     @Transactional
-    public CarDTO createCarWithPhotos(CreateCarRequestDTO req, List<MultipartFile> photos, Profile owner) {
+    public CarDTO createCarWithPhotos(CreateCarRequest req, List<MultipartFile> photos, Profile owner) {
         Car car = createCarEntity(req, owner);
 
         if (!CollectionUtils.isEmpty(photos)) {
@@ -133,7 +136,7 @@ public class CarService {
 
 
 
-    private Car createCarEntity(CreateCarRequestDTO req, Profile owner) {
+    private Car createCarEntity(CreateCarRequest req, Profile owner) {
 
         Car car = carMapper.mapFrom(req);
 

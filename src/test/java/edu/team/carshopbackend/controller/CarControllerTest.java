@@ -3,7 +3,7 @@ package edu.team.carshopbackend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.team.carshopbackend.config.jwtConfig.JwtCore;
 import edu.team.carshopbackend.dto.CarDTO;
-import edu.team.carshopbackend.dto.CreateCarRequestDTO;
+import edu.team.carshopbackend.dto.request.CreateCarRequest;
 import edu.team.carshopbackend.entity.Car;
 import edu.team.carshopbackend.entity.Photo;
 import edu.team.carshopbackend.entity.Profile;
@@ -23,13 +23,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -79,7 +76,7 @@ class CarControllerTest {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
-        CreateCarRequestDTO requestDto = new CreateCarRequestDTO();
+        CreateCarRequest requestDto = new CreateCarRequest();
         requestDto.setName("Audi");
 
         CarDTO responseDto = new CarDTO();

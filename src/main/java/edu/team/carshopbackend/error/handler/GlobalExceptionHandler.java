@@ -4,9 +4,12 @@ import edu.team.carshopbackend.error.ErrorResponse;
 import edu.team.carshopbackend.error.exception.*;
 import jakarta.persistence.EntityExistsException;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -56,6 +59,29 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EmailSendingException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse emailSendingException(EmailSendingException e) {
+        return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),e.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse validationException(MethodArgumentNotValidException e) {
+
+        String message = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> Objects.requireNonNullElse(
+                        error.getDefaultMessage(),
+                        "Validation failed"
+                ))
+                .findFirst()
+                .orElse("Validation failed");
+
+        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message);
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse serverException(Exception e) {
         return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),e.getMessage());
     }
 
