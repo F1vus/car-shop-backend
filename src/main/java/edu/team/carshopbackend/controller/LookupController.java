@@ -21,6 +21,11 @@ public class LookupController {
     private final ColorRepository colorRepository;
     private final PetrolRepository petrolRepository;
 
+    /**
+     * Returns lookup metadata: producers, colors and petrol types.
+     *
+     * @return map with lookup lists
+     */
     @GetMapping("/metadata")
     @Operation(summary = "Get lookup metadata", description = "returns lists of all car producers, available colors, and petrol types in the system")
     public Map<String, Object> getMetadata() {

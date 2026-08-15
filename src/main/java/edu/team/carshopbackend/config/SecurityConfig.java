@@ -39,11 +39,23 @@ public class SecurityConfig {
     @Value("${car-shop-webpage-url}")
     private List<String> allowedOrigins;
 
+    /**
+     * Password encoder bean used to hash user passwords.
+     *
+     * @return BCryptPasswordEncoder instance
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Exposes the AuthenticationManager from the provided configuration.
+     *
+     * @param authenticationConfiguration injected authentication configuration
+     * @return authentication manager
+     * @throws Exception on configuration errors
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
         return authenticationConfiguration.getAuthenticationManager();
@@ -65,11 +77,16 @@ public class SecurityConfig {
         return source;
     }
 
-
-
+    /**
+     * Security filter chain configuration: disables CSRF, enables CORS and JWT filter,
+     * configures stateless session management and logout handling.
+     *
+     * @param security HttpSecurity to configure
+     * @return configured SecurityFilterChain
+     * @throws Exception on configuration errors
+     */
     @Bean
-    protected SecurityFilterChain configure(final HttpSecurity security) throws Exception
-    {
+    protected SecurityFilterChain configure(final HttpSecurity security) throws Exception {
         return security
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(withDefaults())

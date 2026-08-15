@@ -1,5 +1,7 @@
 package edu.team.carshopbackend.dto.AuthDTO;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,6 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VerifyRequestDTO {
+    @NotBlank
     private String token;
+
+    @NotBlank
+    @Email
     private String email;
 }

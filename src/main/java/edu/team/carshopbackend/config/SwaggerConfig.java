@@ -8,6 +8,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 class SwaggerConfig {
 
+    /**
+     * Provides OpenAPI metadata used by Swagger UI.
+     *
+     * @return OpenAPI info object
+     */
     @Bean
     public OpenAPI apiInfo() {
         return new OpenAPI()
