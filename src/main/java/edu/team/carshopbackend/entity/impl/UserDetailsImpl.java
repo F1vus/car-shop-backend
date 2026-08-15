@@ -2,15 +2,18 @@ package edu.team.carshopbackend.entity.impl;
 
 import edu.team.carshopbackend.entity.Profile;
 import edu.team.carshopbackend.entity.User;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
 
 @AllArgsConstructor
+@NullMarked
 public class UserDetailsImpl implements UserDetails {
     @Getter
     @Setter

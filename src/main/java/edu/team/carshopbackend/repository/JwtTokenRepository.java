@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface JwtTokenRepository extends JpaRepository<JwtToken, Long> {
-    Optional<JwtToken> findByToken(String token);
+    Optional<JwtToken> findByJti(String token);
 }

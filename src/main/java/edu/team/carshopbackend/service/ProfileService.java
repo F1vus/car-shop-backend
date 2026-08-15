@@ -35,26 +35,59 @@ public class ProfileService {
         return profileRepository.save(profile);
     }
 
-    public Profile save(Profile profile) {
-        return profileRepository.save(profile);
+    /**
+     * Persist the given profile.
+     *
+     * @param profile profile to save
+     */
+    public void save(Profile profile) {
+        profileRepository.save(profile);
     }
 
+    /**
+     * Returns rating value for the profile identified by given id.
+     *
+     * @param profileId profile id
+     * @return current rating
+     * @throws NotFoundException when profile is not found
+     */
     public double getRating(Long profileId) throws NotFoundException {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new NotFoundException("Profile not found by id: " + profileId));
         return profile.getRating();
     }
 
+    /**
+     * Returns profile belonging to given user id.
+     *
+     * @param userId id of the user
+     * @return profile entity
+     * @throws NotFoundException when user or profile is missing
+     */
     public Profile getProfileByUserId(Long userId) throws NotFoundException {
         return userService.getUserById(userId).getProfile();
     }
 
+    /**
+     * Returns list of cars owned by the profile.
+     *
+     * @param profileId profile id
+     * @return list of cars
+     * @throws NotFoundException when profile is not found
+     */
     public List<Car> getProfileCars(Long profileId) throws NotFoundException {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new NotFoundException("Profile not found by id: " + profileId));
         return profile.getCars();
     }
 
+    /**
+     * Adds a rating to profile and updates average rating and count.
+     *
+     * @param profileId id of the profile to rate
+     * @param rating rating value to add
+     * @return updated profile
+     */
     @Transactional
     public Profile rateProfile(Long profileId, double rating) {
         Profile profile = profileRepository.findById(profileId)
@@ -67,6 +100,13 @@ public class ProfileService {
         return profileRepository.save(profile);
     }
 
+    /**
+     * Adds the car to profile's liked cars if not already present.
+     *
+     * @param profileId profile id
+     * @param carId car id to add
+     * @throws NotFoundException when profile or car is not found
+     */
     @Transactional
     public void addLikedCar(Long profileId, Long carId) throws NotFoundException {
         Profile profile = profileRepository.findById(profileId)
@@ -81,6 +121,13 @@ public class ProfileService {
         }
     }
 
+    /**
+     * Removes the car from profile's liked cars.
+     *
+     * @param profileId profile id
+     * @param carId car id to remove
+     * @throws NotFoundException when profile or car is not found
+     */
     @Transactional
     public void removeLikedCar(Long profileId, Long carId) throws NotFoundException {
         Profile profile = profileRepository.findById(profileId)
@@ -93,6 +140,13 @@ public class ProfileService {
         profileRepository.save(profile);
     }
 
+    /**
+     * Returns DTOs for cars liked by the given profile.
+     *
+     * @param profileId profile id
+     * @return list of CarDTO objects
+     * @throws NotFoundException when profile is not found
+     */
     public List<CarDTO> findLikedByUserId(Long profileId) throws NotFoundException {
         List<Car> likedCars = profileRepository.findLikedCarsByProfileId(profileId);
         return likedCars.stream()

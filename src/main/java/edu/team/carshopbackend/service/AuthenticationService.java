@@ -11,6 +11,8 @@ import edu.team.carshopbackend.error.exception.ChangePasswordException;
 import edu.team.carshopbackend.error.exception.NotFoundException;
 import edu.team.carshopbackend.error.exception.RefreshTokenException;
 import edu.team.carshopbackend.repository.JwtTokenRepository;
+import edu.team.carshopbackend.service.email.EmailAsyncFacade;
+import edu.team.carshopbackend.service.email.EmailService;
 import edu.team.carshopbackend.service.impl.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -35,10 +37,17 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
     private final ProfileService profileService;
-    private final EmailService emailService;
+    private final EmailAsyncFacade emailService;
     private final EmailVerificationTokenService emailVerificationTokenService;
 
 
+    /**
+     * Authenticates user by credentials and returns access and refresh tokens.
+     *
+     * @param loginDTO login data transfer object (email and password)
+     * @return authentication response with access and refresh tokens
+     */
+    @Transactional
     public AuthenticationResponseDTO authenticate(LoginDTO loginDTO) {
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
@@ -57,6 +66,13 @@ public class AuthenticationService {
                 .build();
     }
 
+    /**
+     * Registers a new user and creates an associated profile and email verification token.
+     *
+     * @param signupDTO signup data (username, email, password)
+     * @return success message
+     */
+    @Transactional
     public String register(SignupDTO signupDTO) {
         User user = new User();
 
@@ -70,23 +86,30 @@ public class AuthenticationService {
         profile.setName(signupDTO.getUsername());
         profileService.save(profile);
 
-        emailService.sendVerificationEmail(user.getEmail(), emailVerificationTokenService.createToken(user));
+       var token = emailVerificationTokenService.createToken(user);
+
+        emailService.sendAsync(EmailService.EmailDetails.builder()
+                .subject("Verification system CarShop")
+                .recipient(user.getEmail())
+                .msgBody("Your verification token: "+token.getToken())
+                .build()
+        );
 
         log.info("Registered new user  Id: {}, Email: {}", user.getId(), user.getEmail());
         return "User registered successfully";
     }
 
-    @Transactional
-    public void resetPassword(String email) throws NotFoundException {
-        User user = userService.getUserByEmail(email);
-
-        var token = emailVerificationTokenService.createToken(user);
-        emailService.sendVerificationEmail(email, token);
-    }
-
+    /**
+     * Changes password for the user with the given id after verifying the old password.
+     *
+     * @param userId id of the user
+     * @param dto change password request DTO containing old and new passwords
+     * @throws ChangePasswordException when the old password does not match
+     * @throws NotFoundException when the user is not found
+     */
     @Transactional
     public void changePassword(Long userId, ChangePasswordRequestDTO dto)
-            throws ChangePasswordException, NotFoundException {
+        throws ChangePasswordException, NotFoundException {
 
         User user = userService.getUserById(userId);
 
@@ -98,6 +121,13 @@ public class AuthenticationService {
         userService.updateUser(user);
     }
 
+    /**
+     * Updates the email address of the user.
+     *
+     * @param userId id of the user
+     * @param dto DTO containing the new email
+     * @throws NotFoundException when the user is not found
+     */
     @Transactional
     public void changeEmail(Long userId, UpdateEmailRequestDTO dto) throws NotFoundException {
         User user = userService.getUserById(userId);
@@ -105,6 +135,12 @@ public class AuthenticationService {
         userService.updateUser(user);
     }
 
+    /**
+     * Refreshes access token using the provided refresh token in Authorization header.
+     *
+     * @param request HTTP servlet request containing Authorization header with refresh token
+     * @return new AuthenticationResponseDTO with new access token and the same refresh token
+     */
     public AuthenticationResponseDTO refreshToken(HttpServletRequest request) {
         String refreshToken = null;
         String email;
@@ -129,6 +165,7 @@ public class AuthenticationService {
                     User user = userService.getUserByEmail(email);
 
                     String accessJwt = jwtCore.generateToken(UserDetailsImpl.build(user));
+
                     saveUserJwtToken(user, accessJwt);
 
                     return AuthenticationResponseDTO.builder()
@@ -143,10 +180,12 @@ public class AuthenticationService {
         return null;
     }
 
-    private void saveUserJwtToken(User user, String jwtToken) {
+    private void saveUserJwtToken(User user, String accessToken) {
+        String jti = jwtCore.getJti(accessToken);
+
         var token = new JwtToken();
         token.setUser(user);
-        token.setToken(jwtToken);
+        token.setJti(jti);
         token.setTokenType(JwtTokenType.BEARER);
         token.setRevoked(false);
         token.setExpired(false);
