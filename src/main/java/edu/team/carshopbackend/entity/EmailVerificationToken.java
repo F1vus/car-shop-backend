@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
 
 import java.time.LocalDateTime;
+
+import static org.hibernate.annotations.FetchMode.JOIN;
 
 @Entity
 @Table(name = "email_verification_token")
@@ -19,6 +22,7 @@ public class EmailVerificationToken {
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(unique = true, name = "user_id", nullable = false, referencedColumnName = "id")
+    @Fetch(JOIN)
     private User user;
 
     @Column(nullable = false, name = "token")

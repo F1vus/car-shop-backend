@@ -1,38 +1,45 @@
 package edu.team.carshopbackend.client;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
 
 @Component
 public class PhotoClient {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestClient restClient;
 
-    public UploadPhotoResponse uploadPhoto(Long carId, MultipartFile file) throws IOException {
-        String url = "http://localhost:8000/cars/" + carId + "/photos";
+    public PhotoClient() {
+        this.restClient = RestClient.builder()
+                .baseUrl("http://localhost:8000")
+                .build();
+    }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+    public List<UploadPhotoResponse> uploadPhotos(
+            Long carId,
+            List<MultipartFile> files
+    ) {
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
 
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new MultipartInputStreamFileResource(file));
+        for (MultipartFile file : files) {
+            builder.part("files", file.getResource())
+                    .filename(Objects.requireNonNullElse(file.getOriginalFilename(), "img"))
+                    .contentType(
+                            MediaType.parseMediaType(file.getContentType())
+                    );
+        }
 
-        HttpEntity<MultiValueMap<String, Object>> request =
-                new HttpEntity<>(body, headers);
-
-        ResponseEntity<UploadPhotoResponse> response =
-                restTemplate.postForEntity(url, request, UploadPhotoResponse.class);
-
-        return response.getBody();
+        return restClient.post()
+                .uri("/cars/{carId}/photos", carId)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(builder.build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {});
     }
 }
-

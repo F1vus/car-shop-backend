@@ -44,7 +44,6 @@ public class JwtCore {
         UserDetailsImpl user = (UserDetailsImpl) userDetails;
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("user_profile_id", user.getProfile().getId());
         claims.put("typ", "access");
 
         return buildToken(claims, user, jwtExpiration);

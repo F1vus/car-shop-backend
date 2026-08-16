@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+
+import static org.hibernate.annotations.FetchMode.JOIN;
 
 
 @Entity
@@ -32,5 +35,6 @@ public class JwtToken {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @Fetch(JOIN)
     private User user;
 }

@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,7 +46,7 @@ public class CarController {
             @RequestPart(value = "photos", required = false) List<MultipartFile> photos,
             @AuthenticationPrincipal UserDetailsImpl principal
     ) {
-        return carService.createCarWithPhotos(carRequest, photos, principal.getProfile());
+        return carService.createCarWithPhotos(carRequest, photos, principal);
     }
 
     /**

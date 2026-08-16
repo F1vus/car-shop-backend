@@ -66,7 +66,6 @@ class CarControllerTest {
         Profile profile = new Profile();
 
         UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
-        when(userDetails.getProfile()).thenReturn(profile);
         when(userDetails.getAuthorities()).thenReturn(List.of());
 
         Authentication authentication =
@@ -83,7 +82,7 @@ class CarControllerTest {
         responseDto.setId(1L);
         responseDto.setName("Audi");
 
-        when(carService.createCarWithPhotos(any(), any(), eq(profile)))
+        when(carService.createCarWithPhotos(any(), any(), eq(userDetails)))
                 .thenReturn(responseDto);
 
         MockMultipartFile carPart = new MockMultipartFile(
