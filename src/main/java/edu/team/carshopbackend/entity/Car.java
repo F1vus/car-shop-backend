@@ -6,9 +6,12 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.hibernate.annotations.FetchMode.JOIN;
 
 @Entity
 @Table(name = "cars")
@@ -24,8 +27,9 @@ public class Car {
     @Column(name = "name")
     private String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mark_id", referencedColumnName = "id")
+    @Fetch(JOIN)
     private CarProducent producent;
 
     @Column(name = "price")
@@ -34,8 +38,9 @@ public class Car {
     @Column(name = "description")
     private String description;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id", referencedColumnName = "id")
+    @Fetch(JOIN)
     private Color color;
 
     @Column(name = "mileage")
@@ -45,8 +50,9 @@ public class Car {
     @Convert(converter = CarStateConverter.class)
     private CarState carState;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "petrol_type_id", referencedColumnName = "id")
+    @Fetch(JOIN)
     private Petrol petrolType;
 
     @Column(name = "engine_capacity")
@@ -61,13 +67,15 @@ public class Car {
     @Column(name = "had_accidents", nullable = false)
     private Boolean hadAccidents = false;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_profiles_id", referencedColumnName = "id")
+    @Fetch(JOIN)
     private Profile owner;
 
-    @ManyToMany(mappedBy = "likedCars")
+    @ManyToMany(mappedBy = "likedCars", fetch = FetchType.LAZY)
     private List<Profile> likedByProfiles = new ArrayList<>();
 
     @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Photo> photos;
+    @Fetch(JOIN)
+    private List<Photo> photos = new ArrayList<>();
 }

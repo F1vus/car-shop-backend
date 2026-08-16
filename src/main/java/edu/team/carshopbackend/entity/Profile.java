@@ -5,10 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.hibernate.annotations.FetchMode.JOIN;
 
 @Entity
 @Table(name = "users_profiles")
@@ -25,8 +28,9 @@ public class Profile {
     @Column(nullable = false, name = "profile_name")
     private String name;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(unique = true, name = "user_id", nullable = false, referencedColumnName = "id")
+    @Fetch(JOIN)
     private User user;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -52,7 +56,7 @@ public class Profile {
         this.registrationDate = LocalDateTime.now();
     }
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "profile_liked_cars",
             joinColumns = @JoinColumn(name = "profile_id"),
