@@ -7,7 +7,6 @@ import edu.team.carshopbackend.dto.request.CreateCarRequest;
 import edu.team.carshopbackend.entity.*;
 import edu.team.carshopbackend.entity.impl.UserDetailsImpl;
 import edu.team.carshopbackend.error.exception.NotFoundException;
-import edu.team.carshopbackend.error.exception.PhotoUploadException;
 import edu.team.carshopbackend.mapper.impl.CarMapper;
 import edu.team.carshopbackend.repository.*;
 import jakarta.transaction.Transactional;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,6 +31,7 @@ public class CarService {
     private final PhotoRepository photoRepository;
     private final CarMapper carMapper;
     private final PhotoClient photoClient;
+    private final ProfileRepository profileRepository;
 
     /**
      * Returns all cars stored in the repository.
@@ -73,8 +72,9 @@ public class CarService {
      * @throws NotFoundException when car does not exist
      */
     public Car carUpdate(Long id, Car car, UserDetailsImpl userDetails) throws NotFoundException {
+        Profile profile = profileRepository.findProfileByUserId(userDetails.getId());
         return carRepository.findById(id).map(existingCar -> {
-            if(!Objects.equals(existingCar.getOwner().getId(), userDetails.getProfile().getId())){
+            if(!Objects.equals(existingCar.getOwner().getId(), profile.getId())){
                 throw new NotFoundException("Car does not exist in your profile");
             }
             Optional.ofNullable(car.getName()).ifPresent(existingCar::setName);
@@ -120,11 +120,11 @@ public class CarService {
      *
      * @param req create car request DTO
      * @param photos list of multipart photo files (optional)
-     * @param owner profile of the car owner
      * @return created car DTO
      */
     @Transactional
-    public CarDTO createCarWithPhotos(CreateCarRequest req, List<MultipartFile> photos, Profile owner) {
+    public CarDTO createCarWithPhotos(CreateCarRequest req, List<MultipartFile> photos, UserDetailsImpl userDetails) {
+        Profile owner = profileRepository.findProfileByUserId(userDetails.getId());
         Car car = createCarEntity(req, owner);
 
         if (!CollectionUtils.isEmpty(photos)) {
@@ -150,27 +150,23 @@ public class CarService {
     }
 
     private void attachPhotos(Car car, List<MultipartFile> photos) {
+        if (photos == null || photos.isEmpty()) {
+            return;
+        }
 
-        List<Photo> photoEntities = photos.stream()
-                .map(file -> uploadAndCreatePhoto(car, file))
+        List<UploadPhotoResponse> uploaded =
+                photoClient.uploadPhotos(car.getId(), photos);
+
+        List<Photo> entities = uploaded.stream()
+                .map(response -> {
+                    Photo photo = new Photo();
+                    photo.setCar(car);
+                    photo.setUrl(response.getUrl());
+                    return photo;
+                })
                 .toList();
 
-        photoRepository.saveAll(photoEntities);
-    }
-
-    private Photo uploadAndCreatePhoto(Car car, MultipartFile file) {
-        try {
-            UploadPhotoResponse response = photoClient.uploadPhoto(car.getId(), file);
-
-            Photo photo = new Photo();
-            photo.setCar(car);
-            photo.setUrl(response.getUrl());
-
-            return photo;
-
-        } catch (IOException e) {
-            throw new PhotoUploadException("Failed to upload photo");
-        }
+        photoRepository.saveAll(entities);
     }
 
     private <T> T getOrThrow(JpaRepository<T, Long> repo, Long id, String message) {

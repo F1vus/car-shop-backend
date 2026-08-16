@@ -13,4 +13,6 @@ import java.util.List;
 public interface ProfileRepository extends JpaRepository<Profile, Long> {
     @Query("SELECT c FROM Profile p JOIN p.likedCars c WHERE p.id = :profileId")
     List<Car> findLikedCarsByProfileId(@Param("profileId") Long profileId);
+
+    Profile findProfileByUserId(Long userId);
 }

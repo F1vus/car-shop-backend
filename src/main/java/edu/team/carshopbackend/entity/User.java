@@ -27,7 +27,7 @@ public class User {
     @Column(nullable = false, name = "email_verified")
     private Boolean enabled = false;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "user")
     private Profile profile;
 
     @OneToMany(mappedBy = "user")

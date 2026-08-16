@@ -1,8 +1,6 @@
 package edu.team.carshopbackend.entity.impl;
 
-import edu.team.carshopbackend.entity.Profile;
 import edu.team.carshopbackend.entity.User;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,17 +19,13 @@ public class UserDetailsImpl implements UserDetails {
     private String email;
     private String password;
     private Boolean enabled;
-    @Getter
-    @Setter
-    private Profile profile;
 
     public static UserDetailsImpl build(final User user) {
         return new UserDetailsImpl(
                 user.getId(),
                 user.getEmail(),
                 user.getPassword(),
-                user.getEnabled(),
-                user.getProfile()
+                user.getEnabled()
         );
     }
 
